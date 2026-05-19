@@ -1,0 +1,43 @@
+{
+  "version": "20260423_132038",
+  "trained_at": "2026-04-23T13:20:38.602442",
+  "metrics": {
+    "training_records": 1084,
+    "test_records": 271,
+    "accuracy": 0.955719557195572,
+    "precision": 0.55,
+    "recall": 0.7857142857142857,
+    "f1": 0.6470588235294118,
+    "auc_roc": 0.9674819344080046,
+    "cv_auc_mean": 0.8855475264035576,
+    "cv_auc_std": 0.08891682620162089
+  },
+  "feature_importance": {
+    "current_seat_count": 0.38993117213249207,
+    "no_replacement": 0.2568640112876892,
+    "replacement_urgency": 0.07066559791564941,
+    "client_tenure_at_termination": 0.06679150462150574,
+    "termination_type_encoded": 0.0543634258210659,
+    "checkin_frequency_encoded": 0.04815235361456871,
+    "days_since_checkin": 0.037074893712997437,
+    "days_since_communication": 0.0370304249227047,
+    "offered_discount": 0.020043106749653816,
+    "geo_encoded": 0.019083498045802116,
+    "health_score": 0.0,
+    "had_pip": 0.0
+  },
+  "features": [
+    "days_since_communication",
+    "days_since_checkin",
+    "health_score",
+    "checkin_frequency_encoded",
+    "no_replacement",
+    "replacement_urgency",
+    "had_pip",
+    "offered_discount",
+    "current_seat_count",
+    "client_tenure_at_termination",
+    "termination_type_encoded",
+    "geo_encoded"
+  ]
+}

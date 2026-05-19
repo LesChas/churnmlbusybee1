@@ -1,0 +1,12 @@
+# ML Training Data - GITIGNORED
+# This folder contains the SQLite database and raw data files
+# These are not committed to version control
+
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+*.xlsx
+*.xls
+*.json
+!schema.json

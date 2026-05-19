@@ -1,0 +1,16 @@
+{
+  "churn_model": {
+    "model_name": "xgboost_churn_v1",
+    "model_version": "1.0.0",
+    "metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "auc_roc": 1.0,
+      "training_samples": 80,
+      "test_samples": 20,
+      "positive_rate": 0.2
+    },
+    "feature_importance": {
+      "tenure_months": 
