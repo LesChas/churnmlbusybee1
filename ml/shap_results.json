@@ -1,0 +1,1204 @@
+{
+  "generated_at": "2026-06-15T08:21:50.065674",
+  "mode": "local_mock_data",
+  "model_performance": {
+    "accuracy": 0.7,
+    "auc_roc": 0.4444
+  },
+  "global_feature_importance": [
+    {
+      "feature": "health_score",
+      "label": "Low satisfaction/health score",
+      "mean_abs_shap": 0.7667
+    },
+    {
+      "feature": "tenure_months",
+      "label": "Short client tenure",
+      "mean_abs_shap": 0.7172
+    },
+    {
+      "feature": "industry_encoded",
+      "label": "Industry risk factor",
+      "mean_abs_shap": 0.6196
+    },
+    {
+      "feature": "location_encoded",
+      "label": "Regional risk pattern",
+      "mean_abs_shap": 0.5384
+    },
+    {
+      "feature": "days_since_activity",
+      "label": "No recent engagement",
+      "mean_abs_shap": 0.1973
+    }
+  ],
+  "client_explanations": [
+    {
+      "client_id": "client-0026",
+      "client_name": "Client 26 Corp",
+      "risk_score": 0.7836,
+      "risk_level": "critical",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.5237,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 0.7288,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.469,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0015",
+      "client_name": "Client 15 Corp",
+      "risk_score": 0.7236,
+      "risk_level": "high",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.9322,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 0.8041,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.4872,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0032",
+      "client_name": "Client 32 Corp",
+      "risk_score": 0.7075,
+      "risk_level": "high",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.3879,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 1.3585,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.3348,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0016",
+      "client_name": "Client 16 Corp",
+      "risk_score": 0.512,
+      "risk_level": "high",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.8761,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.8596,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "days_since_activity",
+          "label": "No recent engagement",
+          "reason": "Actively engaged recently",
+          "impact": -0.4526,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0010",
+      "client_name": "Client 10 Corp",
+      "risk_score": 0.4766,
+      "risk_level": "medium",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.8902,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.8413,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.5312,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0003",
+      "client_name": "Client 3 Corp",
+      "risk_score": 0.4306,
+      "risk_level": "medium",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.9641,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.8044,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.648,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0012",
+      "client_name": "Client 12 Corp",
+      "risk_score": 0.3488,
+      "risk_level": "medium",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.8982,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.8413,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6784,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0049",
+      "client_name": "Client 49 Corp",
+      "risk_score": 0.2179,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 1.4586,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6541,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region is stable",
+          "impact": -0.4578,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0023",
+      "client_name": "Client 23 Corp",
+      "risk_score": 0.2106,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 0.8774,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7668,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region is stable",
+          "impact": -0.518,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0018",
+      "client_name": "Client 18 Corp",
+      "risk_score": 0.1847,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.518,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.8014,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6417,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0037",
+      "client_name": "Client 37 Corp",
+      "risk_score": 0.1691,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 1.2456,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5281,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "days_since_activity",
+          "label": "No recent engagement",
+          "reason": "Actively engaged recently",
+          "impact": -0.4305,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0028",
+      "client_name": "Client 28 Corp",
+      "risk_score": 0.1602,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Client is relatively new (short tenure)",
+          "impact": 1.2456,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5863,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "days_since_activity",
+          "label": "No recent engagement",
+          "reason": "Actively engaged recently",
+          "impact": -0.4305,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0040",
+      "client_name": "Client 40 Corp",
+      "risk_score": 0.1341,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7342,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.7135,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6132,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0039",
+      "client_name": "Client 39 Corp",
+      "risk_score": 0.1195,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.7804,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7631,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.62,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0044",
+      "client_name": "Client 44 Corp",
+      "risk_score": 0.1077,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9289,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7963,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.7257,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0038",
+      "client_name": "Client 38 Corp",
+      "risk_score": 0.0986,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.3869,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 0.8148,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6938,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0034",
+      "client_name": "Client 34 Corp",
+      "risk_score": 0.0957,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.297,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.2842,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6996,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0041",
+      "client_name": "Client 41 Corp",
+      "risk_score": 0.0885,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7539,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.5759,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region is stable",
+          "impact": -0.5258,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0045",
+      "client_name": "Client 45 Corp",
+      "risk_score": 0.0799,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.297,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.2937,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8069,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0027",
+      "client_name": "Client 27 Corp",
+      "risk_score": 0.0796,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region shows higher churn patterns",
+          "impact": 1.1792,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.1044,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.704,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0013",
+      "client_name": "Client 13 Corp",
+      "risk_score": 0.0739,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9289,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8267,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.7337,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0001",
+      "client_name": "Client 1 Corp",
+      "risk_score": 0.0701,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.2046,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7169,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.6448,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0006",
+      "client_name": "Client 6 Corp",
+      "risk_score": 0.0664,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7912,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6755,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Satisfaction/health score is low",
+          "impact": 0.67,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0031",
+      "client_name": "Client 31 Corp",
+      "risk_score": 0.0655,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8642,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.83,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry has higher churn tendency",
+          "impact": 0.7402,
+          "direction": "increases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0007",
+      "client_name": "Client 7 Corp",
+      "risk_score": 0.0488,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7539,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region is stable",
+          "impact": -0.5534,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "days_since_activity",
+          "label": "No recent engagement",
+          "reason": "Actively engaged recently",
+          "impact": -0.5513,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0011",
+      "client_name": "Client 11 Corp",
+      "risk_score": 0.0436,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.7539,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.6192,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "location_encoded",
+          "label": "Regional risk pattern",
+          "reason": "Region is stable",
+          "impact": -0.5571,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0024",
+      "client_name": "Client 24 Corp",
+      "risk_score": 0.0407,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.5972,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.4659,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "days_since_activity",
+          "label": "No recent engagement",
+          "reason": "Actively engaged recently",
+          "impact": -0.4305,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0020",
+      "client_name": "Client 20 Corp",
+      "risk_score": 0.0312,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9816,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.4602,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.29,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0017",
+      "client_name": "Client 17 Corp",
+      "risk_score": 0.0261,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7376,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.6775,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6191,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0019",
+      "client_name": "Client 19 Corp",
+      "risk_score": 0.0229,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9607,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6145,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.4109,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0048",
+      "client_name": "Client 48 Corp",
+      "risk_score": 0.0203,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7639,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6106,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.5642,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0005",
+      "client_name": "Client 5 Corp",
+      "risk_score": 0.0193,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.7649,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7639,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.524,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0004",
+      "client_name": "Client 4 Corp",
+      "risk_score": 0.0171,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.7351,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7102,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6784,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0022",
+      "client_name": "Client 22 Corp",
+      "risk_score": 0.0162,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9358,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7681,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5918,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0043",
+      "client_name": "Client 43 Corp",
+      "risk_score": 0.0162,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -1.0591,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8474,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5279,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0025",
+      "client_name": "Client 25 Corp",
+      "risk_score": 0.016,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.8583,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8474,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6727,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0035",
+      "client_name": "Client 35 Corp",
+      "risk_score": 0.016,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9358,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.7681,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5336,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0036",
+      "client_name": "Client 36 Corp",
+      "risk_score": 0.016,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.8583,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8474,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6727,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0008",
+      "client_name": "Client 8 Corp",
+      "risk_score": 0.0145,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.9358,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8849,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.5918,
+          "direction": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "client_id": "client-0033",
+      "client_name": "Client 33 Corp",
+      "risk_score": 0.0141,
+      "risk_level": "low",
+      "top_factors": [
+        {
+          "feature": "tenure_months",
+          "label": "Short client tenure",
+          "reason": "Long-standing client relationship",
+          "impact": -0.8849,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "health_score",
+          "label": "Low satisfaction/health score",
+          "reason": "Strong satisfaction/health score",
+          "impact": -0.7351,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "industry_encoded",
+          "label": "Industry risk factor",
+          "reason": "Industry is stable",
+          "impact": -0.6784,
+          "direction": "decreases_risk"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_active_clients": 40,
+    "critical_risk": 1,
+    "high_risk": 3,
+    "medium_risk": 3,
+    "low_risk": 33
+  }
+}
