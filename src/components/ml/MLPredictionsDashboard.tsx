@@ -100,31 +100,79 @@ function MetricCard({ title, value, subtitle, icon: Icon, trend, onClick, active
 }
 
 function ClientPredictionRow({ prediction }: { prediction: ClientPrediction }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{ backgroundColor: `${RISK_COLORS[prediction.risk_level]}20`, color: RISK_COLORS[prediction.risk_level] }}>
-            {prediction.risk_score}
+    <div
+      className="border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="flex items-center justify-between p-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+              style={{ backgroundColor: `${RISK_COLORS[prediction.risk_level]}20`, color: RISK_COLORS[prediction.risk_level] }}>
+              {prediction.risk_score}
+            </div>
+            <div>
+              <p className="font-medium">{prediction.client_name}</p>
+              <p className="text-sm text-muted-foreground">{prediction.industry} • {prediction.region}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-medium">{prediction.client_name}</p>
-            <p className="text-sm text-muted-foreground">{prediction.industry} • {prediction.region}</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden md:block">
+            <p className="text-sm">{prediction.current_seat_count} seats</p>
+            <p className="text-xs text-muted-foreground">{prediction.tenure_months}mo tenure</p>
           </div>
+          <div className="w-32 hidden lg:block">
+            <Progress value={prediction.churn_probability * 100} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-1">{(prediction.churn_probability * 100).toFixed(0)}% probability</p>
+          </div>
+          <RiskBadge level={prediction.risk_level} />
+          <svg className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="text-right hidden md:block">
-          <p className="text-sm">{prediction.current_seat_count} seats</p>
-          <p className="text-xs text-muted-foreground">{prediction.tenure_months}mo tenure</p>
+      {expanded && (
+        <div className="px-4 pb-4 pt-0 border-t bg-muted/30">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Why They Might Leave</p>
+              <ul className="space-y-1.5">
+                {prediction.top_factors.map((factor, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 text-orange-500 shrink-0" />
+                    <span>{factor}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Details</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{prediction.current_seat_count} seats</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{prediction.tenure_months}mo tenure</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{prediction.days_since_checkin}d since check-in</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{(prediction.churn_probability * 100).toFixed(0)}% risk</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Last predicted: {prediction.last_predicted}</p>
+            </div>
+          </div>
         </div>
-        <div className="w-32 hidden lg:block">
-          <Progress value={prediction.churn_probability * 100} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">{(prediction.churn_probability * 100).toFixed(0)}% probability</p>
-        </div>
-        <RiskBadge level={prediction.risk_level} />
-      </div>
+      )}
     </div>
   );
 }
