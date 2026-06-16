@@ -1,8 +1,11 @@
 """
-BusyBee ML - SHAP Explainability
-=================================
-Generates per-client explanations for churn predictions using SHAP.
+BusyBee ML - SHAP Explainability (Real Model)
+==============================================
+Loads the actual trained churn_model_latest.pkl and generates per-client
+explanations using SHAP TreeExplainer with all 12 production features.
+
 100% local - no database connections, no live data touched.
+Uses realistic mock data that matches the trained model's feature schema.
 
 Usage:
     python shap_explain.py
@@ -15,17 +18,16 @@ Output:
 import os
 import sys
 import json
+import pickle
 import warnings
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List
 
 warnings.filterwarnings('ignore')
 
 import pandas as pd
 import numpy as np
-import xgboost as xgb
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
 
 try:
     import shap
@@ -34,97 +36,193 @@ except ImportError:
     sys.exit(1)
 
 
+# The 12 features used by the real trained model (from metadata)
+MODEL_FEATURES = [
+    'days_since_communication',
+    'days_since_checkin',
+    'health_score',
+    'checkin_frequency_encoded',
+    'no_replacement',
+    'replacement_urgency',
+    'had_pip',
+    'offered_discount',
+    'current_seat_count',
+    'client_tenure_at_termination',
+    'termination_type_encoded',
+    'geo_encoded',
+]
+
 # Human-readable labels for each feature
 FEATURE_LABELS = {
-    'tenure_months': 'Short client tenure',
-    'health_score': 'Low satisfaction/health score',
-    'days_since_activity': 'No recent engagement',
-    'industry_encoded': 'Industry risk factor',
-    'location_encoded': 'Regional risk pattern',
+    'current_seat_count': 'Client seat count',
+    'no_replacement': 'No replacement lined up',
+    'replacement_urgency': 'Replacement urgency/timeline',
+    'client_tenure_at_termination': 'Client tenure length',
+    'termination_type_encoded': 'Termination type',
+    'checkin_frequency_encoded': 'Check-in frequency',
+    'days_since_checkin': 'Days since last check-in',
+    'days_since_communication': 'Days since last communication',
+    'offered_discount': 'Discount/relief offered',
+    'geo_encoded': 'Geo-location',
+    'health_score': 'Client health score',
+    'had_pip': 'PIP was implemented',
 }
 
-# Descriptions for negative vs positive contribution
+# Descriptions for SHAP direction
 FEATURE_REASONS = {
-    'tenure_months': {
-        'high_risk': 'Client is relatively new (short tenure)',
-        'low_risk': 'Long-standing client relationship',
+    'current_seat_count': {
+        'high_risk': 'Larger seat count — higher revenue at stake',
+        'low_risk': 'Smaller engagement — lower exposure',
     },
-    'health_score': {
-        'high_risk': 'Satisfaction/health score is low',
-        'low_risk': 'Strong satisfaction/health score',
+    'no_replacement': {
+        'high_risk': 'No replacement is being lined up',
+        'low_risk': 'Replacement is in progress',
     },
-    'days_since_activity': {
-        'high_risk': 'No recent platform activity',
-        'low_risk': 'Actively engaged recently',
+    'replacement_urgency': {
+        'high_risk': 'Urgent replacement timeline',
+        'low_risk': 'No urgency on replacement',
     },
-    'industry_encoded': {
-        'high_risk': 'Industry has higher churn tendency',
-        'low_risk': 'Industry is stable',
+    'client_tenure_at_termination': {
+        'high_risk': 'Short client tenure — not yet embedded',
+        'low_risk': 'Long-standing relationship — more invested',
     },
-    'location_encoded': {
+    'termination_type_encoded': {
+        'high_risk': 'Termination type indicates higher risk',
+        'low_risk': 'Termination type is routine/planned',
+    },
+    'checkin_frequency_encoded': {
+        'high_risk': 'Low check-in frequency',
+        'low_risk': 'Regular check-in cadence maintained',
+    },
+    'days_since_checkin': {
+        'high_risk': 'No recent check-in with client',
+        'low_risk': 'Recent check-in completed',
+    },
+    'days_since_communication': {
+        'high_risk': 'No recent communication',
+        'low_risk': 'Active communication maintained',
+    },
+    'offered_discount': {
+        'high_risk': 'Had to offer discount to retain (still at risk)',
+        'low_risk': 'No discount needed — organically satisfied',
+    },
+    'geo_encoded': {
         'high_risk': 'Region shows higher churn patterns',
         'low_risk': 'Region is stable',
     },
+    'health_score': {
+        'high_risk': 'Client health score is low',
+        'low_risk': 'Strong client health score',
+    },
+    'had_pip': {
+        'high_risk': 'PIP was implemented — performance concerns',
+        'low_risk': 'No PIP history — clean record',
+    },
 }
 
+# Check-in frequency encoding reference
+CHECKIN_FREQ = {'weekly': 4, 'bi-monthly': 3, 'monthly': 2, 'quarterly': 1, 'none': 0}
+# Termination type encoding reference
+TERM_TYPES = {'resignation': 0, 'replacement': 1, 'termination': 2, 'immediate': 3}
+# Geo encoding reference
+GEOS = {'US': 0, 'Philippines': 1, 'South Africa': 2, 'India': 3, 'Other': 4}
 
-def generate_mock_clients(n: int = 50) -> pd.DataFrame:
-    """Generate realistic mock client data."""
+
+def load_trained_model():
+    """Load the real trained model from models/ directory."""
+    model_dir = Path(__file__).parent / "models"
+    model_path = model_dir / "churn_model_latest.pkl"
+    metadata_path = model_dir / "churn_model_latest_metadata.json"
+
+    if not model_path.exists():
+        print(f"❌ Model not found at: {model_path}")
+        print("   Run training first or ensure churn_model_latest.pkl exists.")
+        sys.exit(1)
+
+    with open(model_path, 'rb') as f:
+        model_data = pickle.load(f)
+
+    metadata = {}
+    if metadata_path.exists():
+        with open(metadata_path) as f:
+            metadata = json.load(f)
+
+    # The pkl may contain just the model or a dict with model + extras
+    if isinstance(model_data, dict):
+        model = model_data.get('model', model_data)
+    else:
+        model = model_data
+
+    features = metadata.get('features', MODEL_FEATURES)
+    print(f"   ✅ Loaded model: {model_path.name}")
+    print(f"   📊 Trained on {metadata.get('metrics', {}).get('training_records', '?')} records")
+    print(f"   🎯 AUC-ROC: {metadata.get('metrics', {}).get('auc_roc', '?')}")
+    print(f"   🔧 Features: {len(features)}")
+
+    return model, metadata, features
+
+
+def generate_realistic_mock_data(n: int = 50) -> pd.DataFrame:
+    """
+    Generate mock client data matching the real model's 12-feature schema.
+    Simulates realistic patterns from form responses.
+    """
     np.random.seed(42)
-
-    industries = ['HEALTHCARE', 'TECHNOLOGY', 'FINANCE', 'RETAIL', 'EDUCATION', 'MANUFACTURING']
-    locations = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia']
-    health_options = ['excellent', 'good', 'fair', 'poor']
 
     clients = []
     for i in range(n):
-        start_date = datetime.now() - timedelta(days=np.random.randint(30, 730))
-        health = np.random.choice(health_options, p=[0.25, 0.40, 0.25, 0.10])
-        tenure_days = (datetime.now() - start_date).days
+        # Simulate realistic distributions based on form data patterns
+        seat_count = np.random.choice([1, 2, 3, 5, 8, 10, 15, 20, 30], p=[0.20, 0.20, 0.15, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03])
+        tenure_days = np.random.randint(30, 1200)
+        health = np.random.choice([1, 2, 3, 4], p=[0.10, 0.20, 0.40, 0.30])
+        checkin_freq = np.random.choice([0, 1, 2, 3, 4], p=[0.05, 0.10, 0.30, 0.30, 0.25])
+        days_comm = int(max(1, min(90, np.random.exponential(14))))
+        days_checkin = int(max(1, min(60, np.random.exponential(10))))
+        no_replacement = np.random.choice([0, 1], p=[0.65, 0.35])
+        replacement_urgency = np.random.choice([0, 1, 2, 3], p=[0.55, 0.20, 0.15, 0.10]) if no_replacement == 0 else 0
+        had_pip = np.random.choice([0, 1], p=[0.85, 0.15])
+        offered_discount = np.random.choice([0, 1], p=[0.80, 0.20])
+        term_type = np.random.choice([0, 1, 2, 3], p=[0.30, 0.35, 0.25, 0.10])
+        geo = np.random.choice([0, 1, 2, 3, 4], p=[0.35, 0.25, 0.20, 0.10, 0.10])
 
-        base_churn_prob = 0.10
-        if health == 'poor':
-            base_churn_prob += 0.30
-        elif health == 'fair':
-            base_churn_prob += 0.15
-        if tenure_days < 90:
-            base_churn_prob += 0.15
+        # Determine churn label based on realistic signal combinations
+        churn_score = 0
+        if no_replacement == 1:
+            churn_score += 3
+        if health <= 2:
+            churn_score += 2
+        if days_comm > 30:
+            churn_score += 1
+        if days_checkin > 21:
+            churn_score += 1
+        if seat_count >= 10:
+            churn_score += 1
+        if term_type >= 2:
+            churn_score += 1
 
-        is_churned = np.random.random() < base_churn_prob
+        churned = 1 if (churn_score >= 4 or (churn_score >= 3 and np.random.random() < 0.6)) else 0
+        if churn_score <= 1:
+            churned = 0
 
         clients.append({
-            'id': f'client-{i:04d}',
-            'name': f'Client {i} Corp',
-            'industry_type': np.random.choice(industries),
-            'client_location': np.random.choice(locations),
-            'start_date': start_date.isoformat(),
-            'status': 'inactive' if is_churned else 'active',
-            'is_active': not is_churned,
-            'health': health,
-            'attrition_date': (start_date + timedelta(days=np.random.randint(30, 365))).isoformat() if is_churned else None,
-            'updated_at': (datetime.now() - timedelta(days=np.random.randint(0, 60))).isoformat(),
+            'client_id': f'client-{i:04d}',
+            'client_name': f'Client {i} Corp',
+            'days_since_communication': int(days_comm),
+            'days_since_checkin': int(days_checkin),
+            'health_score': int(health),
+            'checkin_frequency_encoded': int(checkin_freq),
+            'no_replacement': int(no_replacement),
+            'replacement_urgency': int(replacement_urgency),
+            'had_pip': int(had_pip),
+            'offered_discount': int(offered_discount),
+            'current_seat_count': int(seat_count),
+            'client_tenure_at_termination': int(tenure_days),
+            'termination_type_encoded': int(term_type),
+            'geo_encoded': int(geo),
+            'churned': int(churned),
         })
 
     return pd.DataFrame(clients)
-
-
-def prepare_features(df: pd.DataFrame) -> tuple:
-    """Prepare features and return (X, feature_names)."""
-    features = pd.DataFrame()
-    reference_date = pd.to_datetime('today')
-
-    df = df.copy()
-    df['start_date'] = pd.to_datetime(df['start_date'], errors='coerce')
-    df['updated_at'] = pd.to_datetime(df['updated_at'], errors='coerce')
-
-    features['tenure_months'] = ((reference_date - df['start_date']).dt.days / 30).fillna(0).astype(int)
-    health_mapping = {'excellent': 4, 'good': 3, 'fair': 2, 'poor': 1}
-    features['health_score'] = df['health'].map(health_mapping).fillna(2)
-    features['days_since_activity'] = ((reference_date - df['updated_at']).dt.days).fillna(30).clip(0, 365)
-    features['industry_encoded'] = pd.factorize(df['industry_type'].fillna('OTHER'))[0]
-    features['location_encoded'] = pd.factorize(df['client_location'].fillna('Unknown'))[0]
-
-    return features, features.columns.tolist()
 
 
 def get_risk_level(prob: float) -> str:
@@ -140,7 +238,6 @@ def get_risk_level(prob: float) -> str:
 def explain_client(shap_values_row: np.ndarray, feature_names: List[str], top_n: int = 3) -> List[Dict]:
     """Get top N reasons driving a client's risk, with human-readable labels."""
     contributions = list(zip(feature_names, shap_values_row))
-    # Sort by absolute SHAP value (biggest impact first)
     contributions.sort(key=lambda x: -abs(x[1]))
 
     reasons = []
@@ -160,50 +257,35 @@ def explain_client(shap_values_row: np.ndarray, feature_names: List[str], top_n:
 
 def main():
     print("=" * 60)
-    print("  BusyBee ML - SHAP Explainability (Local)")
+    print("  BusyBee ML - SHAP Explainability (Real Model)")
     print("=" * 60)
     print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print("🔒 Mode: 100% LOCAL - no database connections\n")
+    print("🔒 Mode: 100% LOCAL - no database connections")
+    print("🧠 Using: churn_model_latest.pkl (12 features)\n")
 
-    # --- Generate data & train model ---
-    print("📦 Generating mock client data...")
-    clients_df = generate_mock_clients(50)
-    print(f"   {len(clients_df)} clients ({(clients_df['is_active']).sum()} active, {(~clients_df['is_active']).sum()} churned)\n")
+    # --- Load real trained model ---
+    print("📦 Loading trained model...")
+    model, metadata, feature_names = load_trained_model()
 
-    X_all, feature_names = prepare_features(clients_df)
-    y_all = (clients_df['attrition_date'].notna() | (clients_df['status'] == 'inactive')).astype(int)
+    # --- Generate mock data matching real feature schema ---
+    print("\n📦 Generating realistic mock client data (12 features)...")
+    data_df = generate_realistic_mock_data(50)
+    active_df = data_df[data_df['churned'] == 0].reset_index(drop=True)
+    print(f"   {len(data_df)} total clients ({len(active_df)} active, {data_df['churned'].sum()} churned)\n")
 
-    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.2, random_state=42)
+    # --- Prepare feature matrix ---
+    X_active = active_df[feature_names].copy()
 
-    print("🏋️ Training XGBoost model...")
-    model = xgb.XGBClassifier(
-        max_depth=3,
-        learning_rate=0.1,
-        n_estimators=50,
-        random_state=42,
-        use_label_encoder=False,
-        eval_metric='logloss',
-    )
-    model.fit(X_train, y_train, verbose=False)
-
-    y_pred_proba = model.predict_proba(X_test)[:, 1]
-    auc = roc_auc_score(y_test, y_pred_proba) if len(np.unique(y_test)) > 1 else 0.5
-    acc = accuracy_score(y_test, model.predict(X_test))
-    print(f"   Accuracy: {acc:.1%} | AUC-ROC: {auc:.3f}\n")
+    # --- Run predictions with real model ---
+    print("🎯 Running predictions with trained model...")
+    probabilities = model.predict_proba(X_active)[:, 1]
+    print(f"   ✅ Predictions generated for {len(active_df)} active clients\n")
 
     # --- SHAP Explainability ---
-    print("🔍 Computing SHAP values (TreeExplainer)...")
+    print("🔍 Computing SHAP values (TreeExplainer on real model)...")
     explainer = shap.TreeExplainer(model)
-
-    # Predict on active clients only
-    active_mask = clients_df['is_active'] == True
-    active_df = clients_df[active_mask].reset_index(drop=True)
-    X_active, _ = prepare_features(active_df)
-
     shap_values = explainer.shap_values(X_active)
-    probabilities = model.predict_proba(X_active)[:, 1]
-
-    print(f"   ✅ SHAP values computed for {len(active_df)} active clients\n")
+    print(f"   ✅ SHAP values computed for {len(active_df)} clients\n")
 
     # --- Global Feature Importance (mean |SHAP|) ---
     global_importance = []
@@ -216,10 +298,12 @@ def main():
         })
 
     print("📊 Global Feature Importance (mean |SHAP|):")
-    print("-" * 50)
+    print("-" * 60)
+    max_shap = max(item['mean_abs_shap'] for item in global_importance) if global_importance else 1
     for item in global_importance:
-        bar = "█" * int(item['mean_abs_shap'] * 50)
-        print(f"   {item['label']:<35} {item['mean_abs_shap']:.4f} {bar}")
+        bar_len = int((item['mean_abs_shap'] / max_shap) * 30) if max_shap > 0 else 0
+        bar = "█" * bar_len
+        print(f"   {item['label']:<40} {item['mean_abs_shap']:.4f} {bar}")
 
     # --- Per-client explanations ---
     print("\n" + "=" * 60)
@@ -233,11 +317,12 @@ def main():
         reasons = explain_client(shap_values[i], feature_names, top_n=3)
 
         entry = {
-            'client_id': active_df.iloc[i]['id'],
-            'client_name': active_df.iloc[i]['name'],
+            'client_id': active_df.iloc[i]['client_id'],
+            'client_name': active_df.iloc[i]['client_name'],
             'risk_score': round(float(prob), 4),
             'risk_level': risk_level,
             'top_factors': reasons,
+            'features': {feat: int(active_df.iloc[i][feat]) for feat in feature_names},
         }
         client_explanations.append(entry)
 
@@ -249,7 +334,6 @@ def main():
     for entry in client_explanations[:10]:
         emoji = risk_emoji.get(entry['risk_level'], '⚪')
         print(f"\n{emoji} {entry['client_name']} — {entry['risk_level'].upper()} ({entry['risk_score']:.0%})")
-        # Only show risk-increasing factors
         risk_reasons = [r for r in entry['top_factors'] if r['direction'] == 'increases_risk']
         if not risk_reasons:
             risk_reasons = entry['top_factors'][:2]
@@ -259,8 +343,14 @@ def main():
     # --- Save results ---
     output = {
         'generated_at': datetime.now().isoformat(),
-        'mode': 'local_mock_data',
-        'model_performance': {'accuracy': round(acc, 4), 'auc_roc': round(auc, 4)},
+        'mode': 'local_with_real_model',
+        'model_info': {
+            'file': 'churn_model_latest.pkl',
+            'features_count': len(feature_names),
+            'features': feature_names,
+            'training_records': metadata.get('metrics', {}).get('training_records', 'unknown'),
+            'auc_roc': metadata.get('metrics', {}).get('auc_roc', 'unknown'),
+        },
         'global_feature_importance': global_importance,
         'client_explanations': client_explanations,
         'summary': {
@@ -282,6 +372,9 @@ def main():
     print(f"   🟠 High:     {output['summary']['high_risk']}")
     print(f"   🟡 Medium:   {output['summary']['medium_risk']}")
     print(f"   🟢 Low:      {output['summary']['low_risk']}")
+    print(f"\n🔧 Model uses {len(feature_names)} features from form responses:")
+    for feat in feature_names:
+        print(f"   • {FEATURE_LABELS.get(feat, feat)}")
     print(f"\n✅ Done! Use shap_results.json to power the 'Why They Might Leave' dashboard section.")
 
 
