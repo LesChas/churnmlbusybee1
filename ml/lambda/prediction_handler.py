@@ -15,7 +15,7 @@ import os
 import json
 import pickle
 import boto3
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import logging
 
@@ -130,8 +130,14 @@ class PredictionService:
             # Scale features
             features_scaled = model_data['scaler'].transform(features)
             
+            # Use calibrated model if available (priority #4)
+            predictor = model_data.get('calibrated_model') or model_data['model']
+            
             # Get predictions
-            probabilities = model_data['model'].predict_proba(features_scaled)[:, 1]
+            probabilities = predictor.predict_proba(features_scaled)[:, 1]
+            
+            # Priority #2: Fetch previous predictions for two-strike confirmation
+            previous_predictions = self._fetch_previous_predictions('client_churn_predictions', 'client_id')
             
             # Create predictions
             predictions = []
@@ -139,15 +145,30 @@ class PredictionService:
                 prob = probabilities[idx]
                 risk_score = int(prob * 100)
                 
-                # Determine risk level
-                if prob >= 0.75:
+                # Determine risk level (raised thresholds to reduce false positives)
+                if prob >= 0.85:
                     risk_level = 'critical'
-                elif prob >= 0.50:
+                elif prob >= 0.65:
                     risk_level = 'high'
-                elif prob >= 0.25:
+                elif prob >= 0.40:
                     risk_level = 'medium'
                 else:
                     risk_level = 'low'
+                
+                # Priority #2: Two-strike confirmation
+                # Only confirm 'critical' if previous run also scored high/critical
+                # This eliminates transient spikes from noisy data
+                prev = previous_predictions.get(row['id'])
+                confirmed_risk_level = risk_level
+                if risk_level == 'critical' and prev:
+                    if prev.get('risk_level') not in ('critical', 'high'):
+                        confirmed_risk_level = 'high'  # Downgrade until confirmed
+                        logger.info(f"Two-strike: {row['id']} downgraded critical→high (prev was {prev.get('risk_level')})")
+                elif risk_level == 'high' and prev:
+                    if prev.get('risk_level') == 'low':
+                        confirmed_risk_level = 'medium'  # Don't jump from low to high in one run
+                
+                risk_level = confirmed_risk_level
                 
                 # Get feature values for explainability
                 feature_values = features.iloc[idx].to_dict()
@@ -207,8 +228,11 @@ class PredictionService:
             # Scale features
             features_scaled = model_data['scaler'].transform(features)
             
+            # Use calibrated model if available (priority #4)
+            predictor = model_data.get('calibrated_model') or model_data['model']
+            
             # Get predictions
-            probabilities = model_data['model'].predict_proba(features_scaled)[:, 1]
+            probabilities = predictor.predict_proba(features_scaled)[:, 1]
             
             # Create predictions
             predictions = []
@@ -216,12 +240,12 @@ class PredictionService:
                 prob = probabilities[idx]
                 risk_score = int(prob * 100)
                 
-                # Determine risk level
-                if prob >= 0.75:
+                # Determine risk level (raised thresholds to reduce false positives)
+                if prob >= 0.85:
                     risk_level = 'critical'
-                elif prob >= 0.50:
+                elif prob >= 0.65:
                     risk_level = 'high'
-                elif prob >= 0.25:
+                elif prob >= 0.40:
                     risk_level = 'medium'
                 else:
                     risk_level = 'low'
@@ -371,6 +395,103 @@ class PredictionService:
         
         return features
     
+    def _fetch_previous_predictions(self, table: str, id_column: str) -> Dict[str, Dict]:
+        """
+        Priority #2: Fetch the most recent prediction for each entity.
+        Used for two-strike confirmation - prevents single-run false alarms.
+        Returns dict of {entity_id: {risk_level, probability, date}}.
+        """
+        if not self.supabase:
+            return {}
+        
+        try:
+            response = self.supabase.table(table).select(
+                f'{id_column}, risk_level, churn_probability, prediction_date'
+            ).order('prediction_date', desc=True).limit(500).execute()
+            
+            if not response.data:
+                return {}
+            
+            # Keep only the most recent prediction per entity
+            latest = {}
+            for row in response.data:
+                eid = row[id_column]
+                if eid not in latest:
+                    latest[eid] = {
+                        'risk_level': row.get('risk_level'),
+                        'probability': row.get('churn_probability'),
+                        'date': row.get('prediction_date')
+                    }
+            
+            logger.info(f"Fetched {len(latest)} previous predictions for two-strike check")
+            return latest
+            
+        except Exception as e:
+            logger.warning(f"Could not fetch previous predictions (non-fatal): {e}")
+            return {}
+    
+    def record_feedback(self, client_id: str, prediction_date: str, 
+                       actually_churned: bool, feedback_notes: str = ''):
+        """
+        Priority #6: Record whether a flagged client actually churned.
+        This feedback is used for model retraining and tracking false positive rate.
+        """
+        if not self.supabase:
+            logger.warning("Cannot record feedback - Supabase not available")
+            return
+        
+        try:
+            feedback_data = {
+                'client_id': client_id,
+                'prediction_date': prediction_date,
+                'actually_churned': actually_churned,
+                'feedback_date': datetime.now().isoformat(),
+                'notes': feedback_notes
+            }
+            
+            self.supabase.table('ml_prediction_feedback').upsert(
+                feedback_data,
+                on_conflict='client_id,prediction_date'
+            ).execute()
+            
+            logger.info(f"Feedback recorded for {client_id}: churned={actually_churned}")
+        except Exception as e:
+            logger.error(f"Error recording feedback: {e}")
+    
+    def get_false_positive_rate(self, lookback_days: int = 90) -> Dict[str, Any]:
+        """
+        Priority #6: Calculate false positive rate from feedback data.
+        Returns metrics on model accuracy based on real outcomes.
+        """
+        if not self.supabase:
+            return {'error': 'Supabase not available'}
+        
+        try:
+            cutoff_date = (datetime.now() - timedelta(days=lookback_days)).isoformat()
+            
+            response = self.supabase.table('ml_prediction_feedback').select(
+                'actually_churned, prediction_date'
+            ).gte('feedback_date', cutoff_date).execute()
+            
+            if not response.data:
+                return {'feedback_count': 0, 'message': 'No feedback data yet'}
+            
+            total = len(response.data)
+            actually_churned = sum(1 for r in response.data if r['actually_churned'])
+            false_positives = total - actually_churned
+            
+            return {
+                'feedback_count': total,
+                'true_positives': actually_churned,
+                'false_positives': false_positives,
+                'false_positive_rate': false_positives / total if total > 0 else 0,
+                'precision_actual': actually_churned / total if total > 0 else 0,
+                'lookback_days': lookback_days
+            }
+        except Exception as e:
+            logger.error(f"Error calculating FP rate: {e}")
+            return {'error': str(e)}
+
     def _get_churn_risk_factors(self, features: Dict, probability: float) -> List[Dict]:
         """Get risk factors for churn prediction."""
         risk_factors = []

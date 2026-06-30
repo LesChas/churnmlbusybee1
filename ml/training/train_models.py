@@ -21,9 +21,10 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, confusion_matrix, classification_report
+    roc_auc_score, fbeta_score, confusion_matrix, classification_report
 )
 from sklearn.utils.class_weight import compute_class_weight
 import xgboost as xgb
@@ -126,78 +127,106 @@ class ChurnPredictionModel:
         return churned.astype(int)
     
     def train(self, df: pd.DataFrame, test_size: float = 0.2) -> Dict[str, float]:
-        """Train the XGBoost model."""
+        """Train the XGBoost model optimized for precision (fewer false positives)."""
         print(f"\n{'='*50}")
         print("Training Client Churn Prediction Model")
+        print(f"  Optimized for PRECISION (minimize false positives)")
         print(f"{'='*50}")
         
         # Prepare data
         X = self.prepare_features(df)
         y = self.prepare_target(df)
         
+        # Priority #5: Drop zero-importance features that add noise
+        drop_features = ['health_score']
+        X = X.drop(columns=[f for f in drop_features if f in X.columns], errors='ignore')
+        self.feature_columns = [f for f in self.feature_columns if f not in drop_features]
+        
         print(f"Total samples: {len(y)}")
         print(f"Churned: {y.sum()} ({100*y.mean():.1f}%)")
         print(f"Active: {len(y) - y.sum()} ({100*(1-y.mean()):.1f}%)")
+        print(f"Features: {self.feature_columns}")
         
-        # Handle class imbalance
-        class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
-        weight_dict = dict(zip(np.unique(y), class_weights))
-        sample_weights = y.map(weight_dict)
+        # Priority #3: REMOVED balanced class weights (was inflating recall at cost of precision)
+        # Using uniform weights - let the model learn conservative boundaries
         
         # Split data
-        X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-            X, y, sample_weights, test_size=test_size, random_state=42, stratify=y
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=42, stratify=y
         )
         
         # Scale features
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         
-        # XGBoost parameters optimized for small datasets
+        # Priority #3: XGBoost parameters tuned for precision
+        # - Shallower trees (max_depth=3) = more conservative predictions
+        # - Higher min_child_weight = requires more evidence per leaf
+        # - gamma added = prunes splits that don't significantly reduce loss
         params = {
             'objective': 'binary:logistic',
-            'eval_metric': 'auc',
-            'max_depth': 4,  # Shallow to prevent overfitting on small data
+            'eval_metric': 'aucpr',  # Area under Precision-Recall curve
+            'max_depth': 3,          # Shallower = more conservative (was 4)
             'learning_rate': 0.1,
             'n_estimators': 100,
-            'min_child_weight': 3,
+            'min_child_weight': 5,   # Require more evidence per leaf (was 3)
             'subsample': 0.8,
             'colsample_bytree': 0.8,
+            'gamma': 0.3,            # NEW: prune aggressively to avoid overfitting
             'reg_alpha': 0.1,
             'reg_lambda': 1.0,
             'random_state': 42,
             'use_label_encoder': False
         }
         
-        # Train model
+        # Train base model (NO sample_weight - priority #3)
         self.model = xgb.XGBClassifier(**params)
         self.model.fit(
             X_train_scaled, y_train,
-            sample_weight=w_train,
             eval_set=[(X_test_scaled, y_test)],
             verbose=False
         )
         
-        # Evaluate
-        y_pred = self.model.predict(X_test_scaled)
-        y_pred_proba = self.model.predict_proba(X_test_scaled)[:, 1]
+        # Priority #4: Probability calibration (Platt scaling)
+        # Makes probabilities trustworthy - if model says 0.85, it really means 85%
+        print("\nApplying probability calibration (Platt scaling)...")
+        self.calibrated_model = CalibratedClassifierCV(
+            self.model, method='sigmoid', cv=5
+        )
+        self.calibrated_model.fit(X_train_scaled, y_train)
+        
+        # Evaluate with calibrated model
+        y_pred_proba = self.calibrated_model.predict_proba(X_test_scaled)[:, 1]
+        
+        # Priority #1: Apply raised thresholds for binary classification
+        # Use 0.65 as the decision threshold (not default 0.50)
+        decision_threshold = 0.65
+        y_pred = (y_pred_proba >= decision_threshold).astype(int)
+        
+        # Priority #3: Compute F0.5 (precision-weighted F-score)
+        f05 = fbeta_score(y_test, y_pred, beta=0.5, zero_division=0)
         
         metrics = {
             'accuracy': accuracy_score(y_test, y_pred),
             'precision': precision_score(y_test, y_pred, zero_division=0),
             'recall': recall_score(y_test, y_pred, zero_division=0),
             'f1': f1_score(y_test, y_pred, zero_division=0),
+            'f0.5': f05,
             'auc_roc': roc_auc_score(y_test, y_pred_proba) if len(np.unique(y_test)) > 1 else 0.5,
+            'decision_threshold': decision_threshold,
             'training_samples': len(y_train),
             'test_samples': len(y_test),
-            'positive_rate': float(y.mean())
+            'positive_rate': float(y.mean()),
+            'calibrated': True
         }
         
-        print(f"\nModel Performance:")
+        print(f"\nModel Performance (threshold={decision_threshold}):")
         print(f"  Accuracy:  {metrics['accuracy']:.3f}")
-        print(f"  Precision: {metrics['precision']:.3f}")
+        print(f"  Precision: {metrics['precision']:.3f}  ← TARGET: minimize false positives")
         print(f"  Recall:    {metrics['recall']:.3f}")
         print(f"  F1 Score:  {metrics['f1']:.3f}")
+        print(f"  F0.5:      {metrics['f0.5']:.3f}  ← Precision-weighted score")
+        print(f"  AUC-ROC:   {metrics['auc_roc']:.3f}")
         print(f"  AUC-ROC:   {metrics['auc_roc']:.3f}")
         
         # Feature importance
@@ -211,23 +240,30 @@ class ChurnPredictionModel:
         return metrics
     
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Generate predictions for new data."""
+        """Generate predictions for new data using calibrated model."""
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
         
         X = self.prepare_features(df)
+        
+        # Drop zero-importance features if present
+        drop_features = ['health_score']
+        X = X.drop(columns=[f for f in drop_features if f in X.columns], errors='ignore')
+        
         X_scaled = self.scaler.transform(X)
         
-        probabilities = self.model.predict_proba(X_scaled)[:, 1]
+        # Use calibrated model if available (priority #4)
+        predictor = getattr(self, 'calibrated_model', None) or self.model
+        probabilities = predictor.predict_proba(X_scaled)[:, 1]
         
-        # Create predictions DataFrame
+        # Priority #1: Raised thresholds to reduce false positives
         predictions = pd.DataFrame({
             'client_id': df['id'],
             'churn_probability': probabilities,
             'risk_score': (probabilities * 100).astype(int),
             'risk_level': pd.cut(
                 probabilities,
-                bins=[0, 0.25, 0.5, 0.75, 1.0],
+                bins=[0, 0.40, 0.65, 0.85, 1.0],
                 labels=['low', 'medium', 'high', 'critical']
             )
         })
@@ -286,12 +322,14 @@ class ChurnPredictionModel:
         """Save model to pickle file."""
         model_data = {
             'model': self.model,
+            'calibrated_model': getattr(self, 'calibrated_model', None),
             'label_encoders': self.label_encoders,
             'scaler': self.scaler,
             'feature_columns': self.feature_columns,
             'feature_importance': self.feature_importance,
             'model_version': self.model_version,
             'model_name': self.model_name,
+            'decision_threshold': 0.65,
             'saved_at': datetime.now().isoformat()
         }
         
@@ -308,6 +346,7 @@ class ChurnPredictionModel:
         
         instance = cls(model_version=model_data['model_version'])
         instance.model = model_data['model']
+        instance.calibrated_model = model_data.get('calibrated_model')
         instance.label_encoders = model_data['label_encoders']
         instance.scaler = model_data['scaler']
         instance.feature_columns = model_data['feature_columns']
